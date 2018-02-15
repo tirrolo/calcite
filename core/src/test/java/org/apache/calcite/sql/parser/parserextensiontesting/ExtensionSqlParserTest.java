@@ -33,7 +33,7 @@ import org.junit.Test;
 public class ExtensionSqlParserTest extends SqlParserTest {
 
   @Override protected SqlParserImplFactory parserImplFactory() {
-    return ExtensionSqlParserImpl.FACTORY;
+    return null;
   }
 
   @Test public void testAlterSystemExtension() throws SqlParseException {

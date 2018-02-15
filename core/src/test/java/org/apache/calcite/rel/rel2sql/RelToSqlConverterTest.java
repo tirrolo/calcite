@@ -59,6 +59,7 @@ import static org.junit.Assert.assertThat;
 
 /**
  * Tests for {@link RelToSqlConverter}.
+ *
  */
 public class RelToSqlConverterTest {
   static final SqlToRelConverter.Config DEFAULT_REL_CONFIG =
@@ -2271,6 +2272,7 @@ public class RelToSqlConverterTest {
     final String expected = ""
         + "SELECT \"warehouse_class_id\" AS \"id\", \"description\"\n"
         + "FROM \"foodmart\".\"warehouse_class\"";
+    Sql sqlS = sql(sql);
     sql(sql).ok(expected);
 
     final String sql2 = "select \"warehouse_class_id\", \"description\"\n"
