@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="6.18">
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/main/java/org/apache/calcite/schema/Schemas.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/main/java/org/apache/calcite/runtime/GeoFunctions.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/main/java/org/apache/calcite/runtime/CalciteResource.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/main/java/org/apache/calcite/rel/core/Project.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/main/java/org/apache/calcite/rex/RexProgram.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/main/java/org/apache/calcite/sql/validate/SqlValidatorImpl.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/main/java/org/apache/calcite/sql/type/ReturnTypes.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/main/java/org/apache/calcite/sql/parser/SqlAbstractParserImpl.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/main/java/org/apache/calcite/sql/advise/SqlSimpleParser.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/main/java/org/apache/calcite/plan/volcano/VolcanoRuleMatch.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/RootEmployee.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/jdbc/CalciteRemoteDriverTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/runtime/BinarySearchTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/rel/rel2sql/RelToSqlConverterTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/rel/rules/DateRangeRulesTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/rel/RelCollationTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/util/PermutationTestCase.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/util/mapping/MappingTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/util/graph/DirectedGraphTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/prepare/LookupOperatorOverloadsTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/tools/FrameworksTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/rex/RexBuilderTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/adapter/generate/RangeTable.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/adapter/clone/ArrayTableTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/examples/RelBuilderExample.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/examples/foodmart/java/JdbcExample.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/test/JdbcTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/sql/validate/SqlValidatorUtilTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/sql/type/SqlTypeFactoryTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/sql/parser/parserextensiontesting/ExtensionSqlParserTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/sql/parser/SqlUnParserTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/sql/SqlSetOptionOperatorTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/plan/RelOptPlanReaderTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/plan/volcano/TraitPropagationTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/java/org/apache/calcite/profile/ProfilerTest.java">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/main/resources/org/apache/calcite/runtime/CalciteResource.properties">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/main/resources/version/org-apache-calcite-jdbc.properties">
+</file>
+<file name="/media/tir/pippo/tir/Study/Programming/git/fork/calcite/core/src/test/resources/log4j.properties">
+</file>
+</checkstyle>
