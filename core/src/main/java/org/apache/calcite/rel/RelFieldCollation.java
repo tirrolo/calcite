@@ -16,9 +16,8 @@
  */
 package org.apache.calcite.rel;
 
-import org.apache.calcite.sql.validate.SqlMonotonicity;
-
 import com.google.common.base.Preconditions;
+import org.apache.calcite.sql.validate.SqlMonotonicity;
 
 import java.util.Objects;
 

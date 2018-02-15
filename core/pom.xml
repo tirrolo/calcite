@@ -168,6 +168,11 @@ limitations under the License.
       <artifactId>sqlline</artifactId>
       <scope>test</scope>
     </dependency>
+      <dependency>
+          <groupId>com.google.collections</groupId>
+          <artifactId>google-collections</artifactId>
+          <version>1.0</version>
+      </dependency>
   </dependencies>
 
   <build>
