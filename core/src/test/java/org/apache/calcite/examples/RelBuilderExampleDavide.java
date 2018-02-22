@@ -46,8 +46,14 @@ public class RelBuilderExampleDavide {
     this.verbose = verbose;
   }
 
+  /* The class "Frameworks" contains tools for invoking Calcite functionality
+     without initializing a container server first
+  */
   public static Frameworks.ConfigBuilder config() {
+    // Davide> Create a root schema. Parameter true: Add "metadata" schema containing definitions
+    //         of tables, columns, etc.
     final SchemaPlus rootSchema = Frameworks.createRootSchema(true);
+
     return Frameworks.newConfigBuilder()
         .parserConfig(SqlParser.Config.DEFAULT)
         .defaultSchema(
