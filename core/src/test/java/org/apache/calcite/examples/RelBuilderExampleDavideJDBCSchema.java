@@ -16,11 +16,13 @@
  */
 package org.apache.calcite.examples;
 
+import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitDef;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
+import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlNode;
@@ -32,6 +34,7 @@ import org.apache.calcite.tools.Frameworks;
 import org.apache.calcite.tools.Programs;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.Util;
+import org.apache.commons.dbcp.BasicDataSource;
 
 import java.util.List;
 
@@ -46,21 +49,37 @@ public class RelBuilderExampleDavideJDBCSchema {
     this.verbose = verbose;
   }
 
-  public static Frameworks.ConfigBuilder config() {
-    final SchemaPlus rootSchema = Frameworks.createRootSchema(true);
-    return Frameworks.newConfigBuilder()
-        .parserConfig(SqlParser.Config.DEFAULT)
-        .defaultSchema(
-            CalciteAssert.addSchema(rootSchema, CalciteAssert.SchemaSpec.SCOTT))
-        .traitDefs((List<RelTraitDef>) null)
-        .programs(Programs.heuristicJoinOrder(Programs.RULE_SET, true, 2));
+  // Davide> TODO: STo facendo questa robba, dobbiamo vedere come va poi.
+  public static SchemaPlus createSchema (SchemaPlus rootSchema) throws ClassNotFoundException {
+    Class.forName("com.mysql.jdbc.Driver");
+    BasicDataSource dataSource = new BasicDataSource();
+    dataSource.setUrl("jdbc:mysql://localhost");
+    dataSource.setUsername("username");
+    dataSource.setPassword("password");
+    Schema schema = JdbcSchema.create(rootSchema, "hr", dataSource,
+            null, "name");
+    // SchemaPlus result = rootSchema.add("npd", schema);
+    SchemaPlus result = rootSchema.getSubSchema("hr");
+    return result;
   }
 
-  public static void main(String[] args) {
+  public static Frameworks.ConfigBuilder config() throws ClassNotFoundException {
+    final SchemaPlus rootSchema = Frameworks.createRootSchema(true);
+    SchemaPlus schema = createSchema(rootSchema);
+    return Frameworks.newConfigBuilder()
+            .parserConfig(SqlParser.Config.DEFAULT)
+
+            .defaultSchema(
+                    CalciteAssert.addSchema(rootSchema, CalciteAssert.SchemaSpec.SCOTT))
+            .traitDefs((List<RelTraitDef>) null)
+            .programs(Programs.heuristicJoinOrder(Programs.RULE_SET, true, 2));
+  }
+
+  public static void main(String[] args) throws ClassNotFoundException {
     new RelBuilderExampleDavideJDBCSchema(true).runAllExamples();
   }
 
-  public void runAllExamples() {
+  public void runAllExamples() throws ClassNotFoundException {
     // Create a builder. The config contains a schema mapped
     // to the SCOTT database, with tables EMP and DEPT.
     final FrameworkConfig config = config().build();
