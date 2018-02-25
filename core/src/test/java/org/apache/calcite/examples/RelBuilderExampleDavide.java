@@ -50,8 +50,8 @@ public class RelBuilderExampleDavide {
      without initializing a container server first
   */
   public static Frameworks.ConfigBuilder config() {
-    // Davide> Create a root schema. Parameter true: Add "metadata" schema containing definitions
-    //         of tables, columns, etc.
+    // Davide> Create a root schema. Parameter true: Add "metadata" schema
+    // containing definitions of tables, columns, etc.
     final SchemaPlus rootSchema = Frameworks.createRootSchema(true);
 
     return Frameworks.newConfigBuilder()
