@@ -53,13 +53,13 @@ public class RelBuilderExampleDavideJDBCSchema {
   public static SchemaPlus createSchema (SchemaPlus rootSchema) throws ClassNotFoundException {
     Class.forName("com.mysql.jdbc.Driver");
     BasicDataSource dataSource = new BasicDataSource();
-    dataSource.setUrl("jdbc:mysql://localhost");
-    dataSource.setUsername("username");
-    dataSource.setPassword("password");
-    Schema schema = JdbcSchema.create(rootSchema, "hr", dataSource,
-            null, "name");
+    dataSource.setUrl("jdbc:mysql://localhost/books");
+    dataSource.setUsername("fish");
+    dataSource.setPassword("fish");
+    Schema schema = JdbcSchema.create(rootSchema, "books", dataSource,
+            null, "books");
     // SchemaPlus result = rootSchema.add("npd", schema);
-    SchemaPlus result = rootSchema.getSubSchema("hr");
+    SchemaPlus result = rootSchema.getSubSchema("books");
     return result;
   }
 
@@ -68,9 +68,7 @@ public class RelBuilderExampleDavideJDBCSchema {
     SchemaPlus schema = createSchema(rootSchema);
     return Frameworks.newConfigBuilder()
             .parserConfig(SqlParser.Config.DEFAULT)
-
-            .defaultSchema(
-                    CalciteAssert.addSchema(rootSchema, CalciteAssert.SchemaSpec.SCOTT))
+            .defaultSchema(schema)
             .traitDefs((List<RelTraitDef>) null)
             .programs(Programs.heuristicJoinOrder(Programs.RULE_SET, true, 2));
   }
@@ -84,7 +82,7 @@ public class RelBuilderExampleDavideJDBCSchema {
     // to the SCOTT database, with tables EMP and DEPT.
     final FrameworkConfig config = config().build();
     final RelBuilder builder = RelBuilder.create(config);
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 1; i++) {
       doExample(builder, i);
       final RelNode node = builder.build();
       if (verbose) {
@@ -133,9 +131,21 @@ public class RelBuilderExampleDavideJDBCSchema {
    * <blockquote><pre>SELECT *
    * FROM emp</pre></blockquote>
    */
+//  private RelBuilder example0(RelBuilder builder) {
+//    return builder
+//            .values(new String[] {"a", "b"}, 1, true, null, false);
+//  }
+
+  /**
+   * Creates a relational expression for a table scan.
+   * It is equivalent to
+   *
+   * <blockquote><pre>SELECT *
+   * FROM emp</pre></blockquote>
+   */
   private RelBuilder example0(RelBuilder builder) {
     return builder
-        .values(new String[] {"a", "b"}, 1, true, null, false);
+        .scan("tb_authors");
   }
 
   /**
