@@ -146,6 +146,11 @@ public class Programs {
           JoinPushThroughJoinRule.LEFT,
           SortProjectTransposeRule.INSTANCE);
 
+  public static final ImmutableSet<RelOptRule> RULE_SET_DAVIDE =
+          ImmutableSet.of(
+                  JoinPushThroughJoinRule.RIGHT
+          );
+
   // private constructor for utility class
   private Programs() {}
 

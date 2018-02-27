@@ -16,26 +16,28 @@
  */
 package org.apache.calcite.examples;
 
+import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.RelOptUtilTest;
 import org.apache.calcite.plan.RelTraitDef;
+import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.metadata.DefaultRelMetadataProvider;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.test.CalciteAssert;
-import org.apache.calcite.tools.FrameworkConfig;
-import org.apache.calcite.tools.Frameworks;
-import org.apache.calcite.tools.Programs;
-import org.apache.calcite.tools.RelBuilder;
+import org.apache.calcite.tools.*;
 import org.apache.calcite.util.Util;
 import org.apache.commons.dbcp.BasicDataSource;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -44,22 +46,21 @@ import java.util.List;
  */
 public class RelBuilderExampleDavideJDBCSchema {
   private final boolean verbose;
+  private Planner planner;
 
   public RelBuilderExampleDavideJDBCSchema(boolean verbose) {
     this.verbose = verbose;
   }
 
-  // Davide> TODO: STo facendo questa robba, dobbiamo vedere come va poi.
   public static SchemaPlus createSchema (SchemaPlus rootSchema) throws ClassNotFoundException {
     Class.forName("com.mysql.jdbc.Driver");
     BasicDataSource dataSource = new BasicDataSource();
-    dataSource.setUrl("jdbc:mysql://localhost/books");
+    dataSource.setUrl("jdbc:mysql://localhost/startups");
     dataSource.setUsername("fish");
     dataSource.setPassword("fish");
-    Schema schema = JdbcSchema.create(rootSchema, "books", dataSource,
-            null, "books");
-    // SchemaPlus result = rootSchema.add("npd", schema);
-    SchemaPlus result = rootSchema.getSubSchema("books");
+    Schema schema = JdbcSchema.create(rootSchema, "startups", dataSource,
+            null, "startups");
+    SchemaPlus result = rootSchema.add("startups", schema);
     return result;
   }
 
@@ -69,72 +70,121 @@ public class RelBuilderExampleDavideJDBCSchema {
     return Frameworks.newConfigBuilder()
             .parserConfig(SqlParser.Config.DEFAULT)
             .defaultSchema(schema)
+//            .defaultSchema(CalciteAssert.addSchema(rootSchema, schema))
             .traitDefs((List<RelTraitDef>) null)
-            .programs(Programs.heuristicJoinOrder(Programs.RULE_SET, true, 2));
+            .programs(Programs.heuristicJoinOrder(Programs.RULE_SET_DAVIDE, true, 1));
   }
 
-  public static void main(String[] args) throws ClassNotFoundException {
-    new RelBuilderExampleDavideJDBCSchema(true).runAllExamples();
+  public static void main(String[] args) throws ClassNotFoundException, RelConversionException, SqlParseException, ValidationException {
+    RelBuilderExampleDavideJDBCSchema exampler = new RelBuilderExampleDavideJDBCSchema(true);
+    exampler.runDavideExamples(); // TODO : Testa questo appena hai tempo
+//    exampler.runDavideExamplesFromSQL();
   }
 
-  public void runAllExamples() throws ClassNotFoundException {
-    // Create a builder. The config contains a schema mapped
-    // to the SCOTT database, with tables EMP and DEPT.
+  private void runDavideExamplesFromSQL() throws ClassNotFoundException, RelConversionException, SqlParseException, ValidationException {
     final FrameworkConfig config = config().build();
+    this.planner = Frameworks.getPlanner(config);
     final RelBuilder builder = RelBuilder.create(config);
-    for (int i = 0; i < 1; i++) {
-      doExample(builder, i);
-      final RelNode node = builder.build();
-      if (verbose) {
-        System.out.println("PLAN START");
-        System.out.println(RelOptUtil.toString(node));
-        System.out.println("PLAN END");
-      }
-      // Davide>
-      System.out.println("TRANS START");
-      convert(node);
-      System.out.println("TRANS END");
-    }
+
+      String mysql = "SELECT \"col1\" from \"startups\".\"contactInfo\"";
+
+    System.out.println(mysql);
+    SqlNode sqlNode = this.planner.parse(mysql);
+    SqlNode validatedSqlNode = planner.validate(sqlNode);
+    RelNode logicalPlan = planner.rel(validatedSqlNode).project();
+    RelNode transformedPlan = planner.transform(0, planner.getEmptyTraitSet().replace(EnumerableConvention.INSTANCE), logicalPlan);
+    System.out.println("Logical Plan: ");
+    System.out.println(RelOptUtil.toString(logicalPlan));
+    System.out.println("End Planner");
   }
 
-  private RelBuilder doExample(RelBuilder builder, int i) {
-    switch (i) {
-    case 0:
-      return example0(builder);
-    case 1:
-      return example1(builder);
-    case 2:
-      return example2(builder);
-    case 3:
-      return example3(builder);
-    case 4:
-      return example4(builder);
-    default:
-      throw new AssertionError("unknown example " + i);
-    }
-  }
+  /**
+   * Davide> Very nice transformation:
+   *
+   * (A JOIN B) JOIN C => C JOIN (A JOIN B) [Mi pare, o qualcosa del genere]
+   *
+   * @throws ClassNotFoundException
+   * @throws RelConversionException
+   * @throws SqlParseException
+   * @throws ValidationException
+   */
+  public void runDavideExamples () throws ClassNotFoundException, RelConversionException, SqlParseException, ValidationException {
+    final FrameworkConfig config = config().build();
+    this.planner = Frameworks.getPlanner(config);
+    final RelBuilder builder = RelBuilder.create(config);
+    exampleSelfJoinElimination(builder);
+    final RelNode node = builder.build();
 
-  // Davide>
-  private void convert(RelNode node){
-    SqlDialect dialect = SqlDialect.DatabaseProduct.MSSQL.getDialect();
-    RelToSqlConverter converter = new RelToSqlConverter(SqlDialect.DatabaseProduct.MSSQL.getDialect());
-    SqlNode sqlNode = converter.visitChild(0, node).asStatement();
-    System.out.println(Util.toLinux(sqlNode.toSqlString(dialect).getSql()));
-    //SqlImplementor.Result res = converter.visit(node);
+    if (verbose) {
+
+      System.out.println("PLAN START");
+      System.out.println(RelOptUtil.toString(node));
+      System.out.println("PLAN END");
+    }
+    // Davide>
+    System.out.println("SQL-TRANSLATION START");
+    String mysql = convert(node);
+    System.out.println(convert(node));
+    System.out.println("SQL-TRANSLATION END");
+
+    mysql = mysql.replaceAll("\\[","\"");
+    mysql = mysql.replaceAll("\\]","\"");
+
+    Planner planner = Frameworks.getPlanner(config);
+    SqlNode sqlNode = planner.parse(mysql);
+
+    SqlNode validatedSqlNode = planner.validate(sqlNode);
+    RelNode logicalPlan = planner.rel(validatedSqlNode).project();
+    RelTraitSet traits = planner.getEmptyTraitSet().replace(EnumerableConvention.INSTANCE);
+    RelNode transformedPlan = planner.transform(0, traits, logicalPlan);
+    System.out.println("TRANSFORMED Plan START");
+    System.out.println(RelOptUtil.toString(transformedPlan));
+    System.out.println("TRANSFORMED Plan END");
 
   }
 
   /**
-   * Creates a relational expression for a table scan.
-   * It is equivalent to
-   *
-   * <blockquote><pre>SELECT *
-   * FROM emp</pre></blockquote>
+   * Davide> Convert the root RelNode to (My)SQL
+   * @param node
    */
-//  private RelBuilder example0(RelBuilder builder) {
-//    return builder
-//            .values(new String[] {"a", "b"}, 1, true, null, false);
-//  }
+  private String convert(RelNode node){
+    SqlDialect dialect = SqlDialect.DatabaseProduct.MSSQL.getDialect();
+    RelToSqlConverter converter = new RelToSqlConverter(SqlDialect.DatabaseProduct.MSSQL.getDialect());
+    SqlNode sqlNode = converter.visitChild(0, node).asStatement();
+    String result = Util.toLinux(sqlNode.toSqlString(dialect).getSql());
+    //SqlImplementor.Result res = converter.visit(node);
+    return result;
+  }
+
+  /**
+   *
+   * @param builder
+   * @return An expression containing a self-join that might be eliminated
+   * Trying to get the optimization A JOIN B -> MJ(A, B) (MJ := Multi-join)
+   *
+   * (cI Join cI) Join cI
+   *
+   *
+   * LogicalJoin(condition=[=($0, $24)], joinType=[inner])
+   *   LogicalJoin(condition=[=($0, $12)], joinType=[inner])
+   *     LogicalTableScan(table=[[startups, contactInfo]])
+   *     LogicalTableScan(table=[[startups, contactInfo]])
+   *   LogicalTableScan(table=[[startups, contactInfo]])
+   *
+   */
+  private RelBuilder exampleSelfJoinElimination(RelBuilder builder){
+
+    RelNode left = builder.scan("contactInfo")
+            .scan("contactInfo")
+            .join(JoinRelType.INNER, "col1").build();
+
+    RelNode right = builder.scan("contactInfo").build();
+
+
+    return builder.push(left).push(right).join(JoinRelType.INNER, "col1");
+
+  }
+
 
   /**
    * Creates a relational expression for a table scan.
@@ -145,90 +195,9 @@ public class RelBuilderExampleDavideJDBCSchema {
    */
   private RelBuilder example0(RelBuilder builder) {
     return builder
-        .scan("tb_authors");
+        .scan("contactInfo");
   }
 
-  /**
-   * Creates a relational expression for a table scan.
-   * It is equivalent to
-   *
-   * <blockquote><pre>SELECT *
-   * FROM emp</pre></blockquote>
-   */
-  private RelBuilder example1(RelBuilder builder) {
-    return builder
-        .scan("EMP");
-  }
-
-  /**
-   * Creates a relational expression for a table scan and project.
-   * It is equivalent to
-   *
-   * <blockquote><pre>SELECT deptno, ename
-   * FROM emp</pre></blockquote>
-   */
-  private RelBuilder example2(RelBuilder builder) {
-    return builder
-        .scan("EMP")
-        .project(builder.field("DEPTNO"), builder.field("ENAME"));
-  }
-
-  /**
-   * Creates a relational expression for a table scan, aggregate, filter.
-   * It is equivalent to
-   *
-   * <blockquote><pre>SELECT deptno, count(*) AS c, sum(sal) AS s
-   * FROM emp
-   * GROUP BY deptno
-   * HAVING count(*) &gt; 10</pre></blockquote>
-   */
-  private RelBuilder example3(RelBuilder builder) {
-    return builder
-        .scan("EMP")
-        .aggregate(builder.groupKey("DEPTNO"),
-            builder.count(false, "C"),
-            builder.sum(false, "S", builder.field("SAL")))
-        .filter(
-            builder.call(SqlStdOperatorTable.GREATER_THAN, builder.field("C"),
-                builder.literal(10)));
-  }
-
-  /**
-   * Sometimes the stack becomes so deeply nested it gets confusing. To keep
-   * things straight, you can remove expressions from the stack. For example,
-   * here we are building a bushy join:
-   *
-   * <blockquote><pre>
-   *                join
-   *              /      \
-   *         join          join
-   *       /      \      /      \
-   * CUSTOMERS ORDERS LINE_ITEMS PRODUCTS
-   * </pre></blockquote>
-   *
-   * <p>We build it in three stages. Store the intermediate results in variables
-   * `left` and `right`, and use `push()` to put them back on the stack when it
-   * is time to create the final `Join`.
-   * Davide> BROKEN!
-   */
-  private RelBuilder example4(RelBuilder builder) {
-    final RelNode left = builder
-        .scan("CUSTOMERS")
-        .scan("ORDERS")
-        .join(JoinRelType.INNER, "ORDER_ID")
-        .build();
-
-    final RelNode right = builder
-        .scan("LINE_ITEMS")
-        .scan("PRODUCTS")
-        .join(JoinRelType.INNER, "PRODUCT_ID")
-        .build();
-
-    return builder
-        .push(left)
-        .push(right)
-        .join(JoinRelType.INNER, "ORDER_ID");
-  }
 }
 
 // End RelBuilderExampleDavideJDBCSchema.java

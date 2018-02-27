@@ -16,8 +16,10 @@
  */
 package org.apache.calcite.examples;
 
+import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitDef;
+import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
@@ -25,12 +27,10 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.test.CalciteAssert;
-import org.apache.calcite.tools.FrameworkConfig;
-import org.apache.calcite.tools.Frameworks;
-import org.apache.calcite.tools.Programs;
-import org.apache.calcite.tools.RelBuilder;
+import org.apache.calcite.tools.*;
 import org.apache.calcite.util.Util;
 
 import java.util.List;
@@ -59,19 +59,19 @@ public class RelBuilderExampleDavide {
         .defaultSchema(
             CalciteAssert.addSchema(rootSchema, CalciteAssert.SchemaSpec.SCOTT))
         .traitDefs((List<RelTraitDef>) null)
-        .programs(Programs.heuristicJoinOrder(Programs.RULE_SET, true, 2));
+        .programs(Programs.heuristicJoinOrder(Programs.RULE_SET, false, 2));
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws ValidationException, RelConversionException, SqlParseException {
     new RelBuilderExampleDavide(true).runAllExamples();
   }
 
-  public void runAllExamples() {
+  public void runAllExamples() throws SqlParseException, ValidationException, RelConversionException {
     // Create a builder. The config contains a schema mapped
     // to the SCOTT database, with tables EMP and DEPT.
     final FrameworkConfig config = config().build();
     final RelBuilder builder = RelBuilder.create(config);
-    for (int i = 0; i < 4; i++) {
+    for (int i = 1; i < 2; i++) {
       doExample(builder, i);
       final RelNode node = builder.build();
       if (verbose) {
@@ -81,8 +81,22 @@ public class RelBuilderExampleDavide {
       }
       // Davide>
       System.out.println("TRANS START");
-      convert(node);
+      String mysql = convert(node);
+      System.out.println(mysql);
+      mysql = mysql.replaceAll("\\[","\"");
+      mysql = mysql.replaceAll("\\]","\"");
+
       System.out.println("TRANS END");
+      Planner planner = Frameworks.getPlanner(config);
+      SqlNode sqlNode = planner.parse(mysql);
+
+      SqlNode validatedSqlNode = planner.validate(sqlNode);
+      RelNode logicalPlan = planner.rel(validatedSqlNode).project();
+      RelTraitSet traits = planner.getEmptyTraitSet().replace(EnumerableConvention.INSTANCE);
+      RelNode transformedPlan = planner.transform(0, traits, logicalPlan);
+      System.out.println("Logical Plan: ");
+      System.out.println(RelOptUtil.toString(logicalPlan));
+      System.out.println("End Planner");
     }
   }
 
@@ -104,13 +118,11 @@ public class RelBuilderExampleDavide {
   }
 
   // Davide>
-  private void convert(RelNode node){
+  private String convert(RelNode node){
     SqlDialect dialect = SqlDialect.DatabaseProduct.MSSQL.getDialect();
     RelToSqlConverter converter = new RelToSqlConverter(SqlDialect.DatabaseProduct.MSSQL.getDialect());
     SqlNode sqlNode = converter.visitChild(0, node).asStatement();
-    System.out.println(Util.toLinux(sqlNode.toSqlString(dialect).getSql()));
-    //SqlImplementor.Result res = converter.visit(node);
-
+    return Util.toLinux(sqlNode.toSqlString(dialect).getSql());
   }
 
   /**
