@@ -220,6 +220,25 @@ public class Programs {
     };
   }
 
+    /** Davide> Creates a program that invokes Davide's join-order optimizations
+     *
+     */
+  public static Program davideMakeProgram(
+          final Iterable<? extends RelOptRule> rules) {
+    return new Program() {
+      public RelNode run(RelOptPlanner planner, RelNode rel,
+                         RelTraitSet requiredOutputTraits,
+                         List<RelOptMaterialization> materializations,
+                         List<RelOptLattice> lattices) {
+
+        final Program program;
+        program = ofRules(rules);
+        return program.run(
+                planner, rel, requiredOutputTraits, materializations, lattices);
+      }
+    };
+  }
+
   /** Creates a program that invokes heuristic join-order optimization
    * (via {@link org.apache.calcite.rel.rules.JoinToMultiJoinRule},
    * {@link org.apache.calcite.rel.rules.MultiJoin} and
@@ -266,6 +285,39 @@ public class Programs {
         }
         return program.run(
             planner, rel, requiredOutputTraits, materializations, lattices);
+      }
+    };
+  }
+
+  /** Creates a program that invokes heuristic join-order optimization
+   * (via {@link org.apache.calcite.rel.rules.JoinToMultiJoinRule},
+   * {@link org.apache.calcite.rel.rules.MultiJoin} and
+   * {@link org.apache.calcite.rel.rules.LoptOptimizeJoinRule})
+   * if there are 6 or more joins (7 or more relations). */
+  public static Program joinToMultiJoinDavide() {
+    return new Program() {
+      public RelNode run(RelOptPlanner planner, RelNode rel,
+                         RelTraitSet requiredOutputTraits,
+                         List<RelOptMaterialization> materializations,
+                         List<RelOptLattice> lattices) {
+        final int joinCount = RelOptUtil.countJoins(rel);
+        final Program program;
+        // Create a program that gathers together joins as a MultiJoin.
+        final HepProgram hep = new HepProgramBuilder()
+                /* Match from leaves up. A match attempt
+                 at a descendant precedes all match attempts at its ancestors. */
+                .addMatchOrder(HepMatchOrder.BOTTOM_UP)
+
+                .addRuleInstance(JoinToMultiJoinRule.INSTANCE)
+                .build();
+        final Program program1 =
+                of(hep, false, DefaultRelMetadataProvider.INSTANCE);
+
+        program = program1;
+
+
+        return program.run(
+                planner, rel, requiredOutputTraits, materializations, lattices);
       }
     };
   }

@@ -16,24 +16,30 @@
  */
 package org.apache.calcite.examples;
 
+import com.google.common.collect.ImmutableSet;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
+import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.adapter.jdbc.JdbcSchema;
-import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.plan.RelOptUtilTest;
-import org.apache.calcite.plan.RelTraitDef;
-import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.interpreter.InterpretableConvention;
+import org.apache.calcite.linq4j.tree.Expression;
+import org.apache.calcite.plan.*;
+import org.apache.calcite.plan.hep.HepMatchOrder;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.metadata.DefaultRelMetadataProvider;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
+import org.apache.calcite.rel.rules.*;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.dialect.CalciteSqlDialect;
+import org.apache.calcite.sql.dialect.MysqlSqlDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.test.CalciteAssert;
 import org.apache.calcite.tools.*;
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Util;
 import org.apache.commons.dbcp.BasicDataSource;
 
@@ -70,9 +76,9 @@ public class RelBuilderExampleDavideJDBCSchema {
     return Frameworks.newConfigBuilder()
             .parserConfig(SqlParser.Config.DEFAULT)
             .defaultSchema(schema)
-//            .defaultSchema(CalciteAssert.addSchema(rootSchema, schema))
             .traitDefs((List<RelTraitDef>) null)
-            .programs(Programs.heuristicJoinOrder(Programs.RULE_SET_DAVIDE, true, 1));
+//            .programs(Programs.heuristicJoinOrder(Programs.RULE_SET, false, 2));
+            .programs(Programs.joinToMultiJoinDavide());
   }
 
   public static void main(String[] args) throws ClassNotFoundException, RelConversionException, SqlParseException, ValidationException {
@@ -101,7 +107,7 @@ public class RelBuilderExampleDavideJDBCSchema {
   /**
    * Davide> Very nice transformation:
    *
-   * (A JOIN B) JOIN C => C JOIN (A JOIN B) [Mi pare, o qualcosa del genere]
+   * (A JOIN B) JOIN C => MULTI-JOIN(A,B,C)
    *
    * @throws ClassNotFoundException
    * @throws RelConversionException
@@ -135,7 +141,7 @@ public class RelBuilderExampleDavideJDBCSchema {
 
     SqlNode validatedSqlNode = planner.validate(sqlNode);
     RelNode logicalPlan = planner.rel(validatedSqlNode).project();
-    RelTraitSet traits = planner.getEmptyTraitSet().replace(EnumerableConvention.INSTANCE);
+    RelTraitSet traits = planner.getEmptyTraitSet().replace(EnumerableConvention.INSTANCE); // We need to give the node an IMPLEMENTABLE trait
     RelNode transformedPlan = planner.transform(0, traits, logicalPlan);
     System.out.println("TRANSFORMED Plan START");
     System.out.println(RelOptUtil.toString(transformedPlan));
