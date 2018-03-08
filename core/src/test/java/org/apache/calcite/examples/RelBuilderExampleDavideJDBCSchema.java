@@ -83,8 +83,8 @@ public class RelBuilderExampleDavideJDBCSchema {
 
   public static void main(String[] args) throws ClassNotFoundException, RelConversionException, SqlParseException, ValidationException {
     RelBuilderExampleDavideJDBCSchema exampler = new RelBuilderExampleDavideJDBCSchema(true);
-    exampler.runDavideExamples(); // TODO : Testa questo appena hai tempo
-//    exampler.runDavideExamplesFromSQL();
+//    exampler.runDavideExamples(); // TODO : Testa questo appena hai tempo
+    exampler.runDavideExamplesFromSQL();
   }
 
   private void runDavideExamplesFromSQL() throws ClassNotFoundException, RelConversionException, SqlParseException, ValidationException {
@@ -102,6 +102,9 @@ public class RelBuilderExampleDavideJDBCSchema {
     System.out.println("Logical Plan: ");
     System.out.println(RelOptUtil.toString(logicalPlan));
     System.out.println("End Planner");
+
+    String mysql1 = convert(logicalPlan);
+    System.out.println(mysql1);
   }
 
   /**
