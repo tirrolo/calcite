@@ -33,6 +33,7 @@ import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.prepare.CalcitePrepareImpl;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Calc;
+import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.metadata.ChainedRelMetadataProvider;
 import org.apache.calcite.rel.metadata.DefaultRelMetadataProvider;
@@ -289,6 +290,23 @@ public class Programs {
     };
   }
 
+  public static Program filterJoinRuleProgramDavide() {
+    return new Program() {
+
+      public RelNode run(
+              RelOptPlanner planner, RelNode rel, RelTraitSet requiredOutputTraits,
+              List<RelOptMaterialization> materializations,
+              List<RelOptLattice> lattices) {
+
+        final HepProgram hep = new HepProgramBuilder()
+                .addRuleInstance(FilterJoinRule.FILTER_ON_JOIN)
+                .build();
+        final Program program = of(hep, false, DefaultRelMetadataProvider.INSTANCE);
+        return program.run(planner, rel, requiredOutputTraits, materializations, lattices);
+      }
+    };
+  }
+
   /** Creates a program that invokes heuristic join-order optimization
    * (via {@link org.apache.calcite.rel.rules.JoinToMultiJoinRule},
    * {@link org.apache.calcite.rel.rules.MultiJoin} and
@@ -300,8 +318,7 @@ public class Programs {
                          RelTraitSet requiredOutputTraits,
                          List<RelOptMaterialization> materializations,
                          List<RelOptLattice> lattices) {
-        final int joinCount = RelOptUtil.countJoins(rel);
-        final Program program;
+
         // Create a program that gathers together joins as a MultiJoin.
         final HepProgram hep = new HepProgramBuilder()
                 /* Match from leaves up. A match attempt
@@ -310,11 +327,8 @@ public class Programs {
 
                 .addRuleInstance(JoinToMultiJoinRule.INSTANCE)
                 .build();
-        final Program program1 =
+        final Program program =
                 of(hep, false, DefaultRelMetadataProvider.INSTANCE);
-
-        program = program1;
-
 
         return program.run(
                 planner, rel, requiredOutputTraits, materializations, lattices);
