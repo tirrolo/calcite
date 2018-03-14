@@ -38,29 +38,7 @@ import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.metadata.ChainedRelMetadataProvider;
 import org.apache.calcite.rel.metadata.DefaultRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
-import org.apache.calcite.rel.rules.AggregateExpandDistinctAggregatesRule;
-import org.apache.calcite.rel.rules.AggregateReduceFunctionsRule;
-import org.apache.calcite.rel.rules.AggregateStarTableRule;
-import org.apache.calcite.rel.rules.CalcMergeRule;
-import org.apache.calcite.rel.rules.FilterAggregateTransposeRule;
-import org.apache.calcite.rel.rules.FilterCalcMergeRule;
-import org.apache.calcite.rel.rules.FilterJoinRule;
-import org.apache.calcite.rel.rules.FilterProjectTransposeRule;
-import org.apache.calcite.rel.rules.FilterTableScanRule;
-import org.apache.calcite.rel.rules.FilterToCalcRule;
-import org.apache.calcite.rel.rules.JoinAssociateRule;
-import org.apache.calcite.rel.rules.JoinCommuteRule;
-import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
-import org.apache.calcite.rel.rules.JoinToMultiJoinRule;
-import org.apache.calcite.rel.rules.LoptOptimizeJoinRule;
-import org.apache.calcite.rel.rules.MultiJoinOptimizeBushyRule;
-import org.apache.calcite.rel.rules.ProjectCalcMergeRule;
-import org.apache.calcite.rel.rules.ProjectMergeRule;
-import org.apache.calcite.rel.rules.ProjectToCalcRule;
-import org.apache.calcite.rel.rules.SemiJoinRule;
-import org.apache.calcite.rel.rules.SortProjectTransposeRule;
-import org.apache.calcite.rel.rules.SubQueryRemoveRule;
-import org.apache.calcite.rel.rules.TableScanRule;
+import org.apache.calcite.rel.rules.*;
 import org.apache.calcite.sql2rel.RelDecorrelator;
 import org.apache.calcite.sql2rel.RelFieldTrimmer;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
@@ -300,6 +278,23 @@ public class Programs {
 
         final HepProgram hep = new HepProgramBuilder()
                 .addRuleInstance(FilterJoinRule.FILTER_ON_JOIN)
+                .build();
+        final Program program = of(hep, false, DefaultRelMetadataProvider.INSTANCE);
+        return program.run(planner, rel, requiredOutputTraits, materializations, lattices);
+      }
+    };
+  }
+
+  public static Program joinUnionTrasposeRuleDavide() {
+    return new Program() {
+
+      public RelNode run(
+              RelOptPlanner planner, RelNode rel, RelTraitSet requiredOutputTraits,
+              List<RelOptMaterialization> materializations,
+              List<RelOptLattice> lattices) {
+
+        final HepProgram hep = new HepProgramBuilder()
+                .addRuleInstance(JoinUnionTransposeRule.LEFT_UNION)
                 .build();
         final Program program = of(hep, false, DefaultRelMetadataProvider.INSTANCE);
         return program.run(planner, rel, requiredOutputTraits, materializations, lattices);

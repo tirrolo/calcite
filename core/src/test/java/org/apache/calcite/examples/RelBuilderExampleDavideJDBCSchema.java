@@ -41,6 +41,144 @@ import java.util.List;
  * to create various relational expressions.
  */
 public class RelBuilderExampleDavideJDBCSchema {
+  private void fromSQLExample() throws ClassNotFoundException, RelConversionException, SqlParseException, ValidationException, SQLException {
+    final FrameworkConfig config = config(Programs.joinToMultiJoinDavide()).build();
+    this.planner = Frameworks.getPlanner(config);
+
+    String mysql = "SELECT `col1` from `startups`.`contactInfo`";
+
+    System.out.println(mysql);
+    SqlNode sqlNode = this.planner.parse(mysql);
+    SqlNode validatedSqlNode = planner.validate(sqlNode);
+    RelNode logicalPlan = planner.rel(validatedSqlNode).project();
+    RelNode transformedPlan = planner.transform(0, planner.getEmptyTraitSet().replace(EnumerableConvention.INSTANCE), logicalPlan);
+    System.out.println("PARSED Plan: ");
+    System.out.println(RelOptUtil.toString(logicalPlan));
+    System.out.println("END PARSED Plan");
+
+    String mysql1 = convert(logicalPlan);
+    System.out.println(mysql1);
+  }
+
+  /**
+   * Davide>
+   *
+   * (A Join B) FILTER -> (FILTER A) JOIN B
+   *
+   * @throws ClassNotFoundException
+   * @throws RelConversionException
+   * @throws SqlParseException
+   * @throws ValidationException
+   * @throws SQLException
+   */
+  private void filterIntoJoinExample() throws ClassNotFoundException, RelConversionException, SqlParseException, ValidationException, SQLException {
+    final FrameworkConfig config = config(Programs.filterJoinRuleProgramDavide()).build();
+    this.planner = Frameworks.getPlanner(config);
+
+    String mysql = "SELECT * from `startups`.`contactInfo` " +
+            "AS A INNER JOIN `startups`.`contactInfo` AS B " +
+            "ON A.col1 = B.col1 WHERE A.col18 = 20";
+
+    System.out.println(mysql);
+    SqlNode sqlNode = this.planner.parse(mysql);
+    SqlNode validatedSqlNode = planner.validate(sqlNode);
+    RelNode logicalPlan = planner.rel(validatedSqlNode).project();
+    RelNode transformedPlan = planner.transform(0, planner.getEmptyTraitSet().replace(EnumerableConvention.INSTANCE), logicalPlan);
+    System.out.println("Logical Plan: ");
+    System.out.println(RelOptUtil.toString(logicalPlan));
+    System.out.println("End Planner");
+    System.out.println("Transformed Plan");
+    System.out.println(RelOptUtil.toString(transformedPlan));
+    System.out.println("End Transformed Plan");
+
+    System.out.println("Transformed SQL");
+    String mysql1 = convert(transformedPlan);
+    System.out.println(mysql1);
+    System.out.println("End Transformed SQL");
+  }
+
+  /**
+   * Davide>
+   *
+   * (A Join B) FILTER -> (FILTER A) JOIN B
+   *
+   * @throws ClassNotFoundException
+   * @throws RelConversionException
+   * @throws SqlParseException
+   * @throws ValidationException
+   * @throws SQLException
+   */
+  private void joinUnionTransposeExample() throws ClassNotFoundException, RelConversionException, SqlParseException, ValidationException, SQLException {
+    final FrameworkConfig config = config(Programs.filterJoinRuleProgramDavide()).build();
+    this.planner = Frameworks.getPlanner(config);
+
+    String mysql =
+            "SELECT * FROM " +
+                    "((SELECT col1A FROM A) AS col1 " +
+                    "UNION ALL (SELECT col1B FROM B)) QVIEW " +
+                    "INNER JOIN C ON QVIEW.col1=C.col1C;";
+
+    System.out.println(mysql);
+    SqlNode sqlNode = this.planner.parse(mysql);
+    SqlNode validatedSqlNode = planner.validate(sqlNode);
+    RelNode logicalPlan = planner.rel(validatedSqlNode).project();
+    RelNode transformedPlan = planner.transform(0, planner.getEmptyTraitSet().replace(EnumerableConvention.INSTANCE), logicalPlan);
+    System.out.println("Logical Plan: ");
+    System.out.println(RelOptUtil.toString(logicalPlan));
+    System.out.println("End Planner");
+    System.out.println("Transformed Plan");
+    System.out.println(RelOptUtil.toString(transformedPlan));
+    System.out.println("End Transformed Plan");
+
+    System.out.println("Transformed SQL");
+    String mysql1 = convert(transformedPlan);
+    System.out.println(mysql1);
+    System.out.println("End Transformed SQL");
+  }
+
+
+  /**
+   * Davide> Convert the root RelNode to (My)SQL
+   * @param node
+   */
+  private String convert(RelNode node){
+    SqlDialect dialect = SqlDialect.DatabaseProduct.MYSQL.getDialect();
+    RelToSqlConverter converter = new RelToSqlConverter(dialect);
+    SqlNode sqlNode = converter.visitChild(0, node).asStatement();
+    String result = Util.toLinux(sqlNode.toSqlString(dialect).getSql());
+    //SqlImplementor.Result res = converter.visit(node);
+    return result;
+  }
+
+  /**
+   *
+   * @param builder
+   * @return An expression containing a self-join that might be eliminated
+   * Trying to get the optimization A JOIN B -> MJ(A, B) (MJ := Multi-join)
+   *
+   * (cI Join cI) Join cI
+   *
+   *
+   * LogicalJoin(condition=[=($0, $24)], joinType=[inner])
+   *   LogicalJoin(condition=[=($0, $12)], joinType=[inner])
+   *     LogicalTableScan(table=[[startups, contactInfo]])
+   *     LogicalTableScan(table=[[startups, contactInfo]])
+   *   LogicalTableScan(table=[[startups, contactInfo]])
+   *
+   */
+  private RelBuilder buildThreeSelfJoinExpression(RelBuilder builder){
+
+    RelNode left = builder.scan("contactInfo")
+            .scan("contactInfo")
+            .join(JoinRelType.INNER, "col1").build();
+
+    RelNode right = builder.scan("contactInfo").build();
+
+
+    return builder.push(left).push(right).join(JoinRelType.INNER, "col1");
+
+  }
+
   private Planner planner;
 
   public static SchemaPlus createSchema (SchemaPlus rootSchema) throws ClassNotFoundException, SQLException {
@@ -140,105 +278,6 @@ public class RelBuilderExampleDavideJDBCSchema {
 //    System.out.println("TRANSFORMED-TRANSLATION START");
 //    System.out.println(convert(transformedPlan));
 //    System.out.println("TRANSFORMED-TRANSLATION END");
-
-  }
-
-  private void fromSQLExample() throws ClassNotFoundException, RelConversionException, SqlParseException, ValidationException, SQLException {
-    final FrameworkConfig config = config(Programs.joinToMultiJoinDavide()).build();
-    this.planner = Frameworks.getPlanner(config);
-
-    String mysql = "SELECT `col1` from `startups`.`contactInfo`";
-
-    System.out.println(mysql);
-    SqlNode sqlNode = this.planner.parse(mysql);
-    SqlNode validatedSqlNode = planner.validate(sqlNode);
-    RelNode logicalPlan = planner.rel(validatedSqlNode).project();
-    RelNode transformedPlan = planner.transform(0, planner.getEmptyTraitSet().replace(EnumerableConvention.INSTANCE), logicalPlan);
-    System.out.println("PARSED Plan: ");
-    System.out.println(RelOptUtil.toString(logicalPlan));
-    System.out.println("END PARSED Plan");
-
-    String mysql1 = convert(logicalPlan);
-    System.out.println(mysql1);
-  }
-
-  /**
-   * Davide>
-   *
-   * (A Join B) FILTER -> (FILTER A) JOIN B
-   *
-   * @throws ClassNotFoundException
-   * @throws RelConversionException
-   * @throws SqlParseException
-   * @throws ValidationException
-   * @throws SQLException
-   */
-  private void filterIntoJoinExample() throws ClassNotFoundException, RelConversionException, SqlParseException, ValidationException, SQLException {
-    final FrameworkConfig config = config(Programs.filterJoinRuleProgramDavide()).build();
-    this.planner = Frameworks.getPlanner(config);
-
-    String mysql = "SELECT * from `startups`.`contactInfo` " +
-            "AS A INNER JOIN `startups`.`contactInfo` AS B " +
-            "ON A.col1 = B.col1 WHERE A.col18 = 20";
-
-    System.out.println(mysql);
-    SqlNode sqlNode = this.planner.parse(mysql);
-    SqlNode validatedSqlNode = planner.validate(sqlNode);
-    RelNode logicalPlan = planner.rel(validatedSqlNode).project();
-    RelNode transformedPlan = planner.transform(0, planner.getEmptyTraitSet().replace(EnumerableConvention.INSTANCE), logicalPlan);
-    System.out.println("Logical Plan: ");
-    System.out.println(RelOptUtil.toString(logicalPlan));
-    System.out.println("End Planner");
-    System.out.println("Transformed Plan");
-    System.out.println(RelOptUtil.toString(transformedPlan));
-    System.out.println("End Transformed Plan");
-
-    System.out.println("Transformed SQL");
-    String mysql1 = convert(transformedPlan);
-    System.out.println(mysql1);
-    System.out.println("End Transformed SQL");
-  }
-
-
-  /**
-   * Davide> Convert the root RelNode to (My)SQL
-   * @param node
-   */
-  private String convert(RelNode node){
-    SqlDialect dialect = SqlDialect.DatabaseProduct.MYSQL.getDialect();
-    RelToSqlConverter converter = new RelToSqlConverter(dialect);
-    SqlNode sqlNode = converter.visitChild(0, node).asStatement();
-    String result = Util.toLinux(sqlNode.toSqlString(dialect).getSql());
-    //SqlImplementor.Result res = converter.visit(node);
-    return result;
-  }
-
-  /**
-   *
-   * @param builder
-   * @return An expression containing a self-join that might be eliminated
-   * Trying to get the optimization A JOIN B -> MJ(A, B) (MJ := Multi-join)
-   *
-   * (cI Join cI) Join cI
-   *
-   *
-   * LogicalJoin(condition=[=($0, $24)], joinType=[inner])
-   *   LogicalJoin(condition=[=($0, $12)], joinType=[inner])
-   *     LogicalTableScan(table=[[startups, contactInfo]])
-   *     LogicalTableScan(table=[[startups, contactInfo]])
-   *   LogicalTableScan(table=[[startups, contactInfo]])
-   *
-   */
-  private RelBuilder buildThreeSelfJoinExpression(RelBuilder builder){
-
-    RelNode left = builder.scan("contactInfo")
-            .scan("contactInfo")
-            .join(JoinRelType.INNER, "col1").build();
-
-    RelNode right = builder.scan("contactInfo").build();
-
-
-    return builder.push(left).push(right).join(JoinRelType.INNER, "col1");
 
   }
 }
