@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to you under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.calcite.rel.rules;
 
 import org.apache.calcite.plan.RelOptRule;
@@ -30,26 +14,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * @author TirxSg3ng
+ */
+public class InnerJoinUnionTransposeRuleDavide extends RelOptRule {
+  /**
  * Planner rule that pushes a
  * {@link org.apache.calcite.rel.core.Join}
  * past a non-distinct {@link org.apache.calcite.rel.core.Union}.
- */
-public class JoinUnionTransposeRule extends RelOptRule {
-  public static final JoinUnionTransposeRule LEFT_UNION =
-      new JoinUnionTransposeRule(
+   */
+    public static final InnerJoinUnionTransposeRuleDavide LEFT_UNION =
+      new InnerJoinUnionTransposeRuleDavide(
           operand(Join.class,
               operand(Union.class, any()), // Davide> Union on left
               operand(RelNode.class, any())),
           RelFactories.LOGICAL_BUILDER,
-          "JoinUnionTransposeRule(Union-Other)");
+          "InnerJoinUnionTransposeRuleDavide(Union-Other)");
 
-  public static final JoinUnionTransposeRule RIGHT_UNION =
-      new JoinUnionTransposeRule(
+  public static final InnerJoinUnionTransposeRuleDavide RIGHT_UNION =
+      new InnerJoinUnionTransposeRuleDavide(
           operand(Join.class,
               operand(RelNode.class, any()),
               operand(Union.class, any())), // Davide> Union on the right
           RelFactories.LOGICAL_BUILDER,
-          "JoinUnionTransposeRule(Other-Union)");
+          "InnerJoinUnionTransposeRuleDavide(Other-Union)");
 
   /**
    * Creates a JoinUnionTransposeRule.
@@ -58,8 +45,8 @@ public class JoinUnionTransposeRule extends RelOptRule {
    * @param description       Description, or null to guess description
    * @param relBuilderFactory Builder for relational expressions
    */
-  public JoinUnionTransposeRule(RelOptRuleOperand operand,
-      RelBuilderFactory relBuilderFactory, String description) {
+  public InnerJoinUnionTransposeRuleDavide(RelOptRuleOperand operand,
+                                           RelBuilderFactory relBuilderFactory, String description) {
     super(operand, relBuilderFactory, description);
   }
 
@@ -104,6 +91,4 @@ public class JoinUnionTransposeRule extends RelOptRule {
         unionRel.copy(unionRel.getTraitSet(), newUnionInputs, true);
     call.transformTo(newUnionRel);
   }
-}
-
-// End JoinUnionTransposeRule.java
+  }

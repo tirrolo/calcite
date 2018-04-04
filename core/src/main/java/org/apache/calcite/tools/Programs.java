@@ -33,7 +33,6 @@ import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.prepare.CalcitePrepareImpl;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Calc;
-import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.metadata.ChainedRelMetadataProvider;
 import org.apache.calcite.rel.metadata.DefaultRelMetadataProvider;
@@ -295,6 +294,24 @@ public class Programs {
 
         final HepProgram hep = new HepProgramBuilder()
                 .addRuleInstance(JoinUnionTransposeRule.LEFT_UNION)
+                .build();
+        final Program program = of(hep, false, DefaultRelMetadataProvider.INSTANCE);
+        return program.run(planner, rel, requiredOutputTraits, materializations, lattices);
+      }
+    };
+  }
+
+  public static Program innerJoinUnionTrasposeRule() {
+    return new Program() {
+
+      public RelNode run(
+              RelOptPlanner planner, RelNode rel, RelTraitSet requiredOutputTraits,
+              List<RelOptMaterialization> materializations,
+              List<RelOptLattice> lattices) {
+
+        final HepProgram hep = new HepProgramBuilder()
+                .addRuleInstance(InnerJoinUnionTransposeRuleDavide.LEFT_UNION)
+                .addRuleInstance(InnerJoinUnionTransposeRuleDavide.RIGHT_UNION)
                 .build();
         final Program program = of(hep, false, DefaultRelMetadataProvider.INSTANCE);
         return program.run(planner, rel, requiredOutputTraits, materializations, lattices);

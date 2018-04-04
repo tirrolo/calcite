@@ -5,7 +5,6 @@ import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.config.Lex;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitDef;
-import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.schema.Schema;
@@ -21,8 +20,9 @@ import org.apache.commons.dbcp.BasicDataSource;
 import java.sql.SQLException;
 import java.util.List;
 
-public class RelBuilderExampleJoinUnionTransposeDavide {
-    private Planner planner;
+public class RelBuilderInnerJoinUnionTransposeExampleDavide {
+
+  private Planner planner;
 
   public static SchemaPlus createSchema (SchemaPlus rootSchema) throws ClassNotFoundException, SQLException {
     Class.forName("com.mysql.jdbc.Driver");
@@ -31,8 +31,6 @@ public class RelBuilderExampleJoinUnionTransposeDavide {
     dataSource.setUsername("fish");
     dataSource.setPassword("fish");
 
-
-//  Elem> SqlDialect dialect = new SqlDialectFactoryImpl().create(dataSource.getConnection().getMetaData());
 
     Schema schema = JdbcSchema.create(rootSchema, "prova", dataSource,
             null, "prova");
@@ -46,24 +44,21 @@ public class RelBuilderExampleJoinUnionTransposeDavide {
 
     return Frameworks.newConfigBuilder()
             .parserConfig(SqlParser.configBuilder().setLex(Lex.MYSQL).build())
-//           .parserConfig(SqlParser.Config.DEFAULT)
-
             .defaultSchema(schema)
             .traitDefs((List<RelTraitDef>) null)
-//            .programs(Programs.heuristicJoinOrder(Programs.RULE_SET, false, 2));
             .programs(programs)
             ;
   }
 
   public static void main(String[] args) throws ClassNotFoundException, RelConversionException, SqlParseException, ValidationException, SQLException {
-    RelBuilderExampleJoinUnionTransposeDavide exampler = new RelBuilderExampleJoinUnionTransposeDavide();
-    exampler.joinUnionTransposeExample();
+    RelBuilderInnerJoinUnionTransposeExampleDavide exampler = new RelBuilderInnerJoinUnionTransposeExampleDavide();
+    exampler.innerJoinUnionTransposeExample();
   }
 
    /**
    * Davide>
    *
-   * (A UNION B) JOIN C -> (A JOIN C) UNION (B JOIN C)
+   * (A UNION B) JOIN C -> A JOIN B
    *
    * @throws ClassNotFoundException
    * @throws RelConversionException
@@ -71,14 +66,14 @@ public class RelBuilderExampleJoinUnionTransposeDavide {
    * @throws ValidationException
    * @throws SQLException
    */
-  private void joinUnionTransposeExample() throws ClassNotFoundException, RelConversionException, SqlParseException, ValidationException, SQLException {
+  private void innerJoinUnionTransposeExample() throws ClassNotFoundException, RelConversionException, SqlParseException, ValidationException, SQLException {
     final FrameworkConfig config = config(Programs.joinUnionTrasposeRuleDavide()).build();
     this.planner = Frameworks.getPlanner(config);
 
     String mysql =
             "SELECT * FROM " +
                     "((SELECT `col1A` AS col1 FROM A) " +
-                    "UNION ALL " +
+                    "UNION " +
                     "(SELECT `col1B` as col1 FROM B)) " +
                     "QVIEW INNER JOIN C ON " +
                     "QVIEW.col1=C.`col1C`";
@@ -114,4 +109,4 @@ public class RelBuilderExampleJoinUnionTransposeDavide {
     return result;
   }
 
-}
+};
