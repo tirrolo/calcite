@@ -268,19 +268,24 @@ public class Programs {
   }
 
   public static Program filterJoinRuleProgramDavide() {
-    return new Program() {
+    return (planner, rel, requiredOutputTraits, materializations, lattices) -> {
 
-      public RelNode run(
-              RelOptPlanner planner, RelNode rel, RelTraitSet requiredOutputTraits,
-              List<RelOptMaterialization> materializations,
-              List<RelOptLattice> lattices) {
+      final HepProgram hep = new HepProgramBuilder()
+              .addRuleInstance(FilterJoinRule.FILTER_ON_JOIN)
+              .build();
+      final Program program = of(hep, false, DefaultRelMetadataProvider.INSTANCE);
+      return program.run(planner, rel, requiredOutputTraits, materializations, lattices);
+    };
+  }
 
-        final HepProgram hep = new HepProgramBuilder()
-                .addRuleInstance(FilterJoinRule.FILTER_ON_JOIN)
-                .build();
-        final Program program = of(hep, false, DefaultRelMetadataProvider.INSTANCE);
-        return program.run(planner, rel, requiredOutputTraits, materializations, lattices);
-      }
+  public static Program unionInnerJoinTransposeRuleDavide() {
+    return (planner, rel, requiredOutputTraits, materializations, lattices) -> {
+
+      final HepProgram hep = new HepProgramBuilder()
+              .addRuleInstance(UnionInnerJoinTransposeRuleDavide.LEFT_UNION_PROJ)
+              .build();
+      final Program program = of(hep, false, DefaultRelMetadataProvider.INSTANCE);
+      return program.run(planner, rel, requiredOutputTraits, materializations, lattices);
     };
   }
 
