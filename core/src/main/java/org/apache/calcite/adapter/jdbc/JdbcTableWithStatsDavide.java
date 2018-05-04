@@ -2,10 +2,17 @@ package org.apache.calcite.adapter.jdbc;
 
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.Statistic;
+import org.apache.calcite.schema.StatisticsDavide;
 
-public class JdbcTableDavide extends JdbcTable {
-  JdbcTableDavide(JdbcSchema jdbcSchema, String jdbcCatalogName, String jdbcSchemaName, String tableName, Schema.TableType jdbcTableType) {
+public class JdbcTableWithStatsDavide extends JdbcTable {
+
+  private StatisticsDavide stats;
+
+  JdbcTableWithStatsDavide(JdbcSchemaWithStatsDavide jdbcSchema,
+                                  String jdbcCatalogName, String jdbcSchemaName,
+                                  String tableName, Schema.TableType jdbcTableType) {
     super(jdbcSchema, jdbcCatalogName, jdbcSchemaName, tableName, jdbcTableType);
+
   }
 
 
@@ -20,6 +27,8 @@ public class JdbcTableDavide extends JdbcTable {
    */
   @Override
   public Statistic getStatistic(){
+
+
     return null;
   }
 }

@@ -231,7 +231,6 @@ public class JdbcSchema implements Schema {
     try {
       connection = dataSource.getConnection();
       DatabaseMetaData metaData = connection.getMetaData();
-      metadata.
       resultSet = metaData.getTables(
           catalog,
           schema,

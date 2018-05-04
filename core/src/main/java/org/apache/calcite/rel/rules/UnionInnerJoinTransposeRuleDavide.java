@@ -84,6 +84,7 @@ public class UnionInnerJoinTransposeRuleDavide extends RelOptRule {
     final SetOp newUnionRel =
             rootUnion.copy(rootUnion.getTraitSet(), newUnionInputs, rootUnion.all);
 
+
     Join mainJoin = joinLeft.copy(
             joinLeft.getTraitSet(),
             joinLeft.getCondition(),
