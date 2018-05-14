@@ -1,17 +1,9 @@
 package org.apache.calcite.adapter.jdbc;
 
-import com.google.common.collect.Multimap;
 import org.apache.calcite.linq4j.tree.Expression;
-import org.apache.calcite.rel.type.RelProtoDataType;
 import org.apache.calcite.schema.*;
-import org.apache.calcite.sql.SqlDialect;
-import org.apache.calcite.sql.SqlDialectFactory;
 
-import javax.sql.DataSource;
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -25,6 +17,10 @@ public class SchemaDecoratorDavide implements Schema {
 
   public SchemaDecoratorDavide(Schema decorated){
     this.decorated = decorated;
+  }
+
+  public Schema getDecorated(){
+    return this.decorated;
   }
 
   @Override

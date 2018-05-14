@@ -8,27 +8,24 @@ public class JdbcTableWithStatsDavide extends JdbcTable {
 
   private StatisticsDavide stats;
 
-  JdbcTableWithStatsDavide(JdbcSchemaWithStatsDavide jdbcSchema,
-                                  String jdbcCatalogName, String jdbcSchemaName,
-                                  String tableName, Schema.TableType jdbcTableType) {
-    super(jdbcSchema, jdbcCatalogName, jdbcSchemaName, tableName, jdbcTableType);
+  JdbcTableWithStatsDavide(JdbcSchemaWithStatsDavide jdbcSchema, JdbcTable table,
+                           StatisticsDavide stats) {
 
+
+    super(jdbcSchema.getDecoration(), jdbcSchema.getCatalog(), jdbcSchema.getSchema(), table.tableName().toString(), table.getJdbcTableType());
+    this.stats = stats;
   }
 
 
   /**
-   * TODO
+   *
    * Davide> Overriders AbstractTable.getStatistics()
    * @return Return pre-computed statistics
    *
-   * Allora, quando carico questa JdbcWhatever,
-   * la istruisco anche che deve eseguire certe queries, cosi' da
-   * calcolare quello che mi serve
+   *
    */
   @Override
   public Statistic getStatistic(){
-
-
-    return null;
+    return this.stats;
   }
 }

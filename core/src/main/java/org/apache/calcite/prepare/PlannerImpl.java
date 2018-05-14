@@ -328,8 +328,6 @@ public class PlannerImpl implements Planner {
   public RelNode transform(int ruleSetIndex, RelTraitSet requiredOutputTraits,
       RelNode rel) throws RelConversionException {
     ensure(State.STATE_5_CONVERTED);
-    // Davide: Decorate the cluster with a caching flavor. The cluster contains a VolcanoPlanner
-    //         in my experiments :mumble:
     rel.getCluster().setMetadataProvider(
         new CachingRelMetadataProvider(
             rel.getCluster().getMetadataProvider(),

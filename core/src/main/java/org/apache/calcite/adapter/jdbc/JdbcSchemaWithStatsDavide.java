@@ -6,8 +6,7 @@ import org.apache.calcite.schema.StatisticsDavide;
 import org.apache.calcite.schema.Table;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.ResultSet;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -17,6 +16,9 @@ import java.util.Map;
 public class JdbcSchemaWithStatsDavide extends SchemaDecoratorDavide {
 
   protected SchemaPlus parentSchema;
+
+
+
   protected String name;
   protected DataSource dataSource;
   protected String catalog;
@@ -40,6 +42,10 @@ public class JdbcSchemaWithStatsDavide extends SchemaDecoratorDavide {
     this.dataSource = dataSource;
     this.catalog = catalog;
     this.schema = schema;
+
+    // Init internal structures
+    this.map = new HashMap<>();
+    this.grepper = new StatsGrepper(parentSchema, name, dataSource, catalog, schema);
   }
 
   @Override
@@ -50,14 +56,36 @@ public class JdbcSchemaWithStatsDavide extends SchemaDecoratorDavide {
     return map.get(name);
   }
 
+  public JdbcSchema getDecoration(){
+    return (JdbcSchema)super.getDecorated();
+  }
+
   /**
    * It populates the Map
    */
   protected void computeTable(String name) {
     Table table = super.getTable(name); // In practice, a JdbcTable
-    StatisticsDavide stats = this.grepper.getStatisticsObject();
+    StatisticsDavide stats = this.grepper.getStatisticsObjectForTable(name);
 
+    JdbcTableWithStatsDavide tableWithStats = new JdbcTableWithStatsDavide(this, (JdbcTable)table, stats);
 
+    this.map.put(name, tableWithStats);
+  }
 
+  // Getters
+  public String getName() {
+    return name;
+  }
+
+  public DataSource getDataSource() {
+    return dataSource;
+  }
+
+  public String getCatalog() {
+    return catalog;
+  }
+
+  public String getSchema() {
+    return schema;
   }
 }

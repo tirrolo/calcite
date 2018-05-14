@@ -15,4 +15,6 @@ public interface StatisticsDavide extends Statistic {
 
   public int getDistinctForCol(int colID);
 
+
+
 }

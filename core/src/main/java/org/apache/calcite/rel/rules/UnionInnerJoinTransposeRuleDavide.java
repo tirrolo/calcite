@@ -14,6 +14,8 @@ import java.util.List;
 
 /**
  * @Author TirxSg3ng
+ *
+ * I keep this class as a proof of concept
  */
 public class UnionInnerJoinTransposeRuleDavide extends RelOptRule {
 
@@ -64,22 +66,24 @@ public class UnionInnerJoinTransposeRuleDavide extends RelOptRule {
     // Selectivities
     final RelMetadataQuery mq = call.getMetadataQuery();
 
-    RelNode maybeProj = joinLeft.getInput(0);
-    Double resultMaybeProj = mq.getRowCount(maybeProj);
+    RelNode projOverScan = joinLeft.getInput(0);
+    Double rowCountProjOverScan = mq.getRowCount(projOverScan);
     RelNode scanC = joinLeft.getInput(1);
-    Double resultScanC = mq.getRowCount(maybeProj);
+    Double resultScanC = mq.getRowCount(scanC);
+    Double rootEst = rootUnion.estimateRowCount(mq);
 
     final ImmutableBitSet.Builder joinKeys = ImmutableBitSet.builder();
 
-    Double ssassa = mq.getDistinctRowCount(maybeProj, joinKeys.build(), null);
-    System.out.println("SSSASSSA: " + ssassa);
-
-    System.out.println(" maybeProj " + resultMaybeProj);
+    System.out.println(" projOverScan " + rowCountProjOverScan);
     System.out.println(" scanC " + resultScanC);
+    System.out.println(" rootCount" + rootEst);
 
     List<RelNode> newUnionInputs = new ArrayList<RelNode>();
     newUnionInputs.add(joinLeft.getLeft());
     newUnionInputs.add(joinRight.getLeft());
+
+//    newUnionInputs.add(joinLeft.getLeft()); // Garbage TO TEST
+//    newUnionInputs.add(joinRight.getLeft()); // COST
 
     final SetOp newUnionRel =
             rootUnion.copy(rootUnion.getTraitSet(), newUnionInputs, rootUnion.all);

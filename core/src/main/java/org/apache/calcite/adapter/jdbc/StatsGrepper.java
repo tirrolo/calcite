@@ -24,15 +24,16 @@ public class StatsGrepper {
     this.schema = schema;
   }
 
-  public StatisticsDavide getStatisticsObject() {
+  public StatisticsDavide getStatisticsObjectForTable(String tableName) {
     Connection connection = null;
     ResultSet resultSet = null;
     int numRows = 0;
     try {
       connection = dataSource.getConnection();
-      String query = Templates.replacePlaceholder(Templates.ROW_COUNT, "$1", this.name);
+      String query = Templates.replacePlaceholder(Templates.ROW_COUNT, "$1", tableName);
+      query = "SELECT COUNT(*) AS ciao FROM A";
       PreparedStatement stmt = connection.prepareStatement(query);
-      ResultSet resultsSet = stmt.executeQuery();
+      resultSet = stmt.executeQuery();
       if (resultSet.next()) {
         numRows = resultSet.getInt(1);
       }

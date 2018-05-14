@@ -216,7 +216,9 @@ public class RelMdRowCount
   }
 
   public Double getRowCount(TableScan rel, RelMetadataQuery mq) {
-    return rel.estimateRowCount(mq);
+    // Davide: Debugging
+    Double result = rel.estimateRowCount(mq);
+    return result;
   }
 
   public Double getRowCount(Values rel, RelMetadataQuery mq) {
